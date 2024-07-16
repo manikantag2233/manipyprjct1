@@ -1,0 +1,85 @@
+import requests
+from bs4 import BeautifulSoup
+import pandas as pd
+import matplotlib.pyplot as plt
+import datetime
+
+def get_covid_data():
+    """Fetches COVID-19 statistics from a reliable source (Worldometer)."""
+
+    url = "https://www.worldometers.info/coronavirus/"
+    response = requests.get(url)
+    soup = BeautifulSoup(response.text, 'html.parser')
+
+    # Extract relevant data
+    table = soup.find('table', id="main_table_countries_today")
+    data = []
+    for row in table.find_all('tr'):
+        cols = row.find_all('td')
+        if len(cols) > 0:
+            country = cols[0].text.strip()
+            total_cases = int(cols[1].text.replace(',', ''))
+            new_cases = int(cols[2].text.replace(',', ''))
+            total_deaths = int(cols[3].text.replace(',', ''))
+            new_deaths = int(cols[4].text.replace(',', ''))
+            total_recovered = int(cols[5].text.replace(',', ''))
+            active_cases = int(cols[6].text.replace(',', ''))
+            critical_cases = int(cols[7].text.replace(',', ''))
+            total_tests = int(cols[8].text.replace(',', ''))
+            data.append([country, total_cases, new_cases, total_deaths, new_deaths, total_recovered, active_cases, critical_cases, total_tests])
+
+    return pd.DataFrame(data, columns=['Country', 'Total Cases', 'New Cases', 'Total Deaths', 'New Deaths', 'Total Recovered', 'Active Cases', 'Critical Cases', 'Total Tests'])
+
+def display_global_summary(data):
+    """Displays a summary of global COVID-19 statistics."""
+
+    print("## Global COVID-19 Summary ##")
+    print(f"Total Cases: {data['Total Cases'].sum():,}")
+    print(f"New Cases: {data['New Cases'].sum():,}")
+    print(f"Total Deaths: {data['Total Deaths'].sum():,}")
+    print(f"New Deaths: {data['New Deaths'].sum():,}")
+    print(f"Total Recovered: {data['Total Recovered'].sum():,}")
+    print(f"Active Cases: {data['Active Cases'].sum():,}")
+    print("-" * 30)
+
+def display_country_data(data, country):
+    """Displays COVID-19 statistics for a specific country."""
+
+    country_data = data[data['Country'] == country]
+    if country_data.empty:
+        print(f"Data for {country} not found.")
+        return
+
+    print(f"## COVID-19 Statistics for {country} ##")
+    print(country_data[['Total Cases', 'New Cases', 'Total Deaths', 'New Deaths', 'Total Recovered', 'Active Cases', 'Critical Cases', 'Total Tests']].to_string(index=False))
+    print("-" * 30)
+
+def plot_data(data, country, metric):
+    """Plots a time series graph for a specific metric for a country."""
+
+    # Implement a time series data collection (e.g., from a database or API)
+    # Replace this placeholder with your actual data retrieval logic
+    time_series_data = {} 
+
+    plt.figure(figsize=(10, 6))
+    plt.plot(time_series_data.keys(), time_series_data.values())
+    plt.xlabel("Date")
+    plt.ylabel(metric)
+    plt.title(f"{metric} Trend in {country}")
+    plt.xticks(rotation=45)
+    plt.tight_layout()
+    plt.show()
+
+if __name__ == "__main__":
+    data = get_covid_data()
+
+    # Display global summary
+    display_global_summary(data)
+
+    # Display data for a specific country (e.g., United States)
+    country = "United States"
+    display_country_data(data, country)
+
+    # Plot data for a specific metric (e.g., total cases)
+    metric = "Total Cases"
+    plot_data(data, country, metric)
