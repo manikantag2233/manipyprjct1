@@ -62,7 +62,7 @@ class Covid19Tracker:
 
 if __name__ == "__main__":
     # Replace with your actual API key (Get one from https://covid19api.com/documentation/api-key)
-    api_key = 67a08a5835msha3bc8aedb120a48p13381fjsn0c4b13f66995
+    api_key = "67a08a5835msha3bc8aedb120a48p13381fjsn0c4b13f66995"
     country_code = "US"  # Replace with the country code you want to track
     history_days = 7
 
