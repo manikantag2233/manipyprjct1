@@ -1,0 +1,93 @@
+import pandas as pd
+
+class InventoryManagementSystem:
+    def __init__(self, filename="inventory.csv"):
+        self.filename = filename
+        self.inventory = self.load_inventory()
+
+    def load_inventory(self):
+        """Loads inventory data from a CSV file."""
+        try:
+            return pd.read_csv(self.filename)
+        except FileNotFoundError:
+            print("Inventory file not found. Creating a new one.")
+            return pd.DataFrame(columns=['Item', 'Quantity', 'Price', 'Reorder Point'])
+
+    def save_inventory(self):
+        """Saves inventory data to the CSV file."""
+        self.inventory.to_csv(self.filename, index=False)
+
+    def add_item(self, item, quantity, price, reorder_point=0):
+        """Adds a new item to the inventory."""
+        if item in self.inventory['Item'].values:
+            print(f"Item '{item}' already exists. Updating quantity.")
+            self.inventory.loc[self.inventory['Item'] == item, 'Quantity'] += quantity
+        else:
+            new_item = pd.DataFrame([[item, quantity, price, reorder_point]], columns=self.inventory.columns)
+            self.inventory = pd.concat([self.inventory, new_item], ignore_index=True)
+        self.save_inventory()
+        print(f"Item '{item}' added to inventory.")
+
+    def remove_item(self, item, quantity=None):
+        """Removes an item from the inventory."""
+        if item in self.inventory['Item'].values:
+            if quantity is None:
+                self.inventory = self.inventory[self.inventory['Item'] != item]
+            else:
+                self.inventory.loc[self.inventory['Item'] == item, 'Quantity'] -= quantity
+                if self.inventory.loc[self.inventory['Item'] == item, 'Quantity'].values[0] <= 0:
+                    self.inventory = self.inventory[self.inventory['Item'] != item]
+            self.save_inventory()
+            print(f"Item '{item}' removed from inventory.")
+        else:
+            print(f"Item '{item}' not found in inventory.")
+
+    def update_item(self, item, **kwargs):
+        """Updates an item's information."""
+        if item in self.inventory['Item'].values:
+            for key, value in kwargs.items():
+                if key in self.inventory.columns:
+                    self.inventory.loc[self.inventory['Item'] == item, key] = value
+            self.save_inventory()
+            print(f"Item '{item}' updated.")
+        else:
+            print(f"Item '{item}' not found in inventory.")
+
+    def display_inventory(self):
+        """Displays the current inventory."""
+        print("## Inventory ##")
+        print(self.inventory.to_string(index=False))
+
+    def generate_reorder_report(self):
+        """Generates a report of items that need to be reordered."""
+        reorder_items = self.inventory[self.inventory['Quantity'] <= self.inventory['Reorder Point']]
+        if reorder_items.empty:
+            print("No items need to be reordered.")
+        else:
+            print("## Reorder Report ##")
+            print(reorder_items.to_string(index=False))
+
+if __name__ == "__main__":
+    # Create an instance of the inventory management system
+    inventory_system = InventoryManagementSystem()
+
+    # Add some initial items
+    inventory_system.add_item("Laptop", 10, 1200, 5)
+    inventory_system.add_item("Mouse", 50, 15, 10)
+    inventory_system.add_item("Keyboard", 20, 75, 8)
+
+    # Display the inventory
+    inventory_system.display_inventory()
+
+    # Remove some items
+    inventory_system.remove_item("Mouse", 10)
+    inventory_system.remove_item("Keyboard")
+
+    # Update an item's quantity
+    inventory_system.update_item("Laptop", Quantity=15)
+
+    # Display the updated inventory
+    inventory_system.display_inventory()
+
+    # Generate reorder report
+    inventory_system.generate_reorder_report()
