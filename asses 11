@@ -1,13 +1,15 @@
 import requests
 import json
-from datetime import datetime
+from datetime import datetime, timedelta
 import time
 import matplotlib.pyplot as plt
 
 class WeatherMonitor:
-    def __init__(self, api_key, location):
+    def __init__(self, api_key, location, history_duration=12):
         self.api_key = api_key
         self.location = location
+        self.history_duration = history_duration
+        self.temperature_history = []
 
     def get_weather_data(self):
         """Fetches weather data from OpenWeatherMap API."""
@@ -36,39 +38,42 @@ class WeatherMonitor:
             print(f"Description: {description}")
             print("-" * 30)
 
-    def plot_temperature_trend(self, data, num_hours=12):
-        """Plots temperature data over a specified time period (default: 12 hours)."""
+    def update_temperature_history(self, data):
+        """Updates the temperature history with the latest data."""
         if data:
-            temp_data = []
-            timestamp_data = []
+            temp = data['main']['temp'] - 273.15
+            self.temperature_history.append((datetime.now(), temp))
+            self.temperature_history = self.temperature_history[-self.history_duration:]
 
-            # Retrieve temperature data for the past num_hours
-            # (Assume you have historical data or a mechanism to get it)
+    def plot_temperature_trend(self):
+        """Plots the temperature trend over the specified history duration."""
+        timestamps = [item[0] for item in self.temperature_history]
+        temperatures = [item[1] for item in self.temperature_history]
 
-            plt.figure(figsize=(10, 6))
-            plt.plot(timestamp_data, temp_data)
-            plt.xlabel("Time")
-            plt.ylabel("Temperature (°C)")
-            plt.title(f"Temperature Trend in {self.location} (Past {num_hours} hours)")
-            plt.xticks(rotation=45)
-            plt.tight_layout()
-            plt.show()
+        plt.figure(figsize=(10, 6))
+        plt.plot(timestamps, temperatures)
+        plt.xlabel("Time")
+        plt.ylabel("Temperature (°C)")
+        plt.title(f"Temperature Trend in {self.location} (Past {self.history_duration} hours)")
+        plt.xticks(rotation=45)
+        plt.tight_layout()
+        plt.show()
 
 if __name__ == "__main__":
     # Replace with your actual OpenWeatherMap API key
-    api_key = "YOUR_API_KEY"
+    api_key = 29ee57f181860dec491262a72de04621 
 
-    # Set the location
+    # Set the location and history duration
     location = "London"
+    history_duration = 12
 
-    monitor = WeatherMonitor(api_key, location)
+    monitor = WeatherMonitor(api_key, location, history_duration)
 
     while True:
         weather_data = monitor.get_weather_data()
         monitor.display_current_weather(weather_data)
-
-        # Plot temperature trend (replace with your historical data retrieval)
-        monitor.plot_temperature_trend(weather_data)
+        monitor.update_temperature_history(weather_data)
+        monitor.plot_temperature_trend()
 
         # Update data every X seconds (adjust as needed)
         time.sleep(60)
