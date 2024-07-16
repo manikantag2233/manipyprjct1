@@ -1,0 +1,61 @@
+import requests
+from bs4 import BeautifulSoup
+import pandas as pd
+import time
+import matplotlib.pyplot as plt
+from datetime import datetime
+
+# Define a function to fetch traffic data from a specific URL
+def get_traffic_data(url):
+    """Fetches traffic data from a specified URL."""
+
+    try:
+        response = requests.get(url)
+        response.raise_for_status()  # Raise an exception for bad status codes
+
+        soup = BeautifulSoup(response.content, 'html.parser')
+
+        # Example: Extract traffic information from HTML (adjust based on the website structure)
+        traffic_table = soup.find('table', id='traffic-table')  # Placeholder - Adjust selector
+        data = []
+        for row in traffic_table.find_all('tr'):
+            cols = row.find_all('td')
+            if len(cols) > 0:
+                location = cols[0].text.strip()
+                traffic_level = cols[1].text.strip()  # Example: "High", "Moderate", "Low"
+                data.append([location, traffic_level])
+
+        return pd.DataFrame(data, columns=['Location', 'Traffic Level'])
+
+    except requests.exceptions.RequestException as e:
+        print(f"Error fetching data: {e}")
+        return None
+
+# Define a function to visualize traffic data
+def visualize_traffic(data):
+    """Visualizes traffic data using a bar chart."""
+
+    # Example: Create a bar chart showing traffic levels at different locations
+    plt.figure(figsize=(10, 6))
+    plt.bar(data['Location'], data['Traffic Level'])  # Example: Assuming traffic level is a categorical value
+    plt.xlabel('Location')
+    plt.ylabel('Traffic Level')
+    plt.title('Real-Time Traffic Monitoring')
+    plt.xticks(rotation=45)
+    plt.tight_layout()
+    plt.show()
+
+if __name__ == "__main__":
+    # Replace with the actual URL of your traffic data source
+    traffic_url = "https://www.example.com/traffic"  # Placeholder - Provide the real URL
+
+    while True:
+        traffic_data = get_traffic_data(traffic_url)
+
+        if traffic_data is not None:
+            print(f"---- Traffic Data ({datetime.now()}) ----")
+            print(traffic_data)
+            visualize_traffic(traffic_data)
+
+        # Update data every X seconds (adjust as needed)
+        time.sleep(60)
