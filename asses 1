@@ -61,7 +61,7 @@ class WeatherMonitor:
 
 if __name__ == "__main__":
     # Replace with your actual OpenWeatherMap API key
-    api_key = 29ee57f181860dec491262a72de04621 
+    api_key = "29ee57f181860dec491262a72de04621" 
 
     # Set the location and history duration
     location = "London"
